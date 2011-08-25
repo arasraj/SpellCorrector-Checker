@@ -40,7 +40,7 @@ def helper(root, target):
         row.append(min(m[i-1]+1,
                       m[i]+1,
                       row[i-1]+1))
-    trie_levenshtein(val, target, 1, row, total)
+    trie_levenshtein(val, target, 2, row, total)
   print 'total', total
 
 def trie_levenshtein(trie, target, currentrow, matrix, dist): 
@@ -60,7 +60,6 @@ def trie_levenshtein(trie, target, currentrow, matrix, dist):
     if v.endpoint and row[-1] <= 1:
       ed = row[-1]
       dist.append((v.endpoint, ed))
-      print dist
 
     #matrix = numpy.vstack((matrix, row))
     trie_levenshtein(v, target, currentrow+1, row, dist)
