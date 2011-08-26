@@ -1,7 +1,69 @@
+#!/usr/bin/env python
+
 import numpy
-import time
+import sys
+
+
+def suggest_words(root, target, max_distance):
+  suggestions = []
+  find_editdistances(root, target, 1, [0], suggestions, max_distance)
+  return suggestions
+
+def find_editdistances(root, target, currentrow_num, lastrow, distances, max_distance): 
+  """ Traverses trie and calculates edit distances of every word in dictionary to the
+      target word.  It does not keep the whole edit distance matrix in memory.
+      Only the last row and current row are needed because we are incremently building
+      up the distance matrix based on word prefixes obtained from the trie.
+  """
+
+  alphabet = root.alphabet
+
+  # Prune search space to make more efficient.
+  # If a entry in the edit distance row is greater
+  # than max_distance we no longer need finish calculating
+  # the rest of the words edit distance.
+  if min(lastrow) > max_distance:
+  	return 
+
+  for candidate_char, trie in alphabet.iteritems():
+  	# create first row of edit distance matrix only if
+    # we are in the first recursive call
+    if currentrow_num == 1:
+      lastrow = [i for i in range(len(target)+1)]
+
+    # calculate edit distance for the current letter.
+    row = [currentrow_num]
+    for i, target_char in enumerate(target, start=1):
+      if target_char == candidate_char:
+        row.append(lastrow[i-1])
+      else:
+        row.append(min(lastrow[i-1]+1,
+                       lastrow[i]+1,
+                       row[i-1]+1))
+    
+    edit_distance = row[-1]
+    if trie.endpoint and edit_distance <= max_distance:
+      distances.append(trie.endpoint)
+
+    find_editdistances(trie, target, currentrow_num+1, row, distances, max_distance)
+  
+
+
+def create_triedict():
+  """Creates a trie from all the words in the Unix dictionary """
+
+  trie = Trie()
+  with open('/usr/share/dict/words', 'rt') as f:
+    for word in f.read().split():
+      trie.insert(word.lower())
+  return trie
 
 def levenshtein(source,target):
+
+  """First implementation of Levenshtein Distance.
+     Not used in trie base version
+  """
+
   slen = len(source)+1
   tlen = len(target)+1
   m = numpy.zeros((tlen, slen))
@@ -24,134 +86,46 @@ def levenshtein(source,target):
 
   return m[tlen-1,slen-1]
 
-def helper(root, target):
-  total = []
-  for let,val in root.alpha.items():
-    #m = numpy.zeros((1, len(target)+1))
-    m = []
-    for i in range(len(target)+1):
-      m.append(i)
-    row = [1]
-    for i, tlet in enumerate(target, start=1):
-      if tlet == let:
-        row.append(m[i-1])
-      else:
-        # ONLY need to keep previous row at a time
-        row.append(min(m[i-1]+1,
-                      m[i]+1,
-                      row[i-1]+1))
-    trie_levenshtein(val, target, 2, row, total)
-  print 'total', total
-
-def trie_levenshtein(trie, target, currentrow, matrix, dist): 
-  tlen = len(target)+1
-
-  for k,v in trie.alpha.items():
-    row = [currentrow]
-    for i,tlet in enumerate(target, start=1):
-      if tlet == k:
-        row.append(matrix[i-1])
-      else:
-        # ONLY need to keep previous row at a time
-        row.append(min(matrix[i-1]+1,
-                      matrix[i]+1,
-                      row[i-1]+1))
-    
-    if v.endpoint and row[-1] <= 1:
-      ed = row[-1]
-      dist.append((v.endpoint, ed))
-
-    #matrix = numpy.vstack((matrix, row))
-    trie_levenshtein(v, target, currentrow+1, row, dist)
-  
-
-def valid_words(target):
-  l = [word[:-1] for word in open('/usr/share/dict/words', 'r') 
-       if levenshtein(word[:-1],target) <= 1]
-  return l
-
-
 class Trie:
-  def __init__(self, endpoint=None):
-    self.alpha = {}
-    self.endpoint = endpoint
+  """Trie consists of a dictionary of letters -> trie nodes """
+
+  def __init__(self):
+    self.alphabet = {}
+    self.endpoint = None
 
   def insert(self, word):
-    #for word in l:
     current = self
-    for let in word:
-      if let not in current.alpha:
-        current.alpha[let] = Trie()
-      current = current.alpha[let]
+    for char in word:
+      if char not in current.alphabet:
+        current.alphabet[char] = Trie()
+      current = current.alphabet[char]
     current.endpoint = word
 
-    #self.print_trie(self.alpha,0)
+  def print_trie(self, alphabet,n):
+    """Print the trie data structure in a somewhat readable format """
 
-  def print_trie(self, alpha,n):
-    for k,v in alpha.items():
+    for k,v in alphabet.items():
       for i in range(n): print ' ',
       print k
       if v.endpoint:
       	pass
-      self.print_trie(v.alpha, n+1)
-
-  # same as above -- delete
-  def recursive_print(self, root, n):
-    for key,v in root.items():
-      #for i in range(n): print ' ',
-      print key
-      self.recursive_print(v.alpha, n+1)
-      	
-
+      self.print_trie(v.alphabet, n+1)
 
   def find(self, word):
+    """Checks to see if a word exists in the trie """
+
     current = self
-    for let in word:
-      if let not in current.alpha:
+    for char in word:
+      if char not in current.alphabet:
       	return False
-      current = current.alpha[let]
+      current = current.alphabet[char]
     if current.endpoint == word:
       return True
     return False
 
-def create_trie():
-  trie = Trie()
-  with open('/usr/share/dict/words', 'r') as f:
-    for word in f.read().split():
-      if word[-1] == '\n':
-        trie.insert(word[:-1].lower())
-      else:
-        trie.insert(word.lower())
-  #trie = Trie()
-  #for word in ["b's", 'baby', 'babyhood', 'cat']:
-  #	trie.insert(word)
-
-
-  #print 'Done'
-  #print trie.find('babyhood')
-  #print trie.find('baby')
-  #print trie.find('cat')
-  #print trie.find('insertion')
-  #print trie.find('given')
-  #print trie.find('smallest')
-  return trie
-
-    
-
-
-
 if __name__ == '__main__':
-	#print levenshtein('kitten', 'sitting')
-	#t.build(['cadet', 'apple', 'cab', 'cabbie', 'cally'])
-	#t.recursive_print(t.alpha,0)
-	#helper(t,'calob')
-	#print t.find('cad')
-	#print t.find('appl')
-	#print t.find('apple')
-	#print t.find('cab')
-	#print t.find('acoc')
-	t = create_trie()
-	start = time.time()
-	helper(t, 'apple')
-	end = time.time()
-	print end-start
+	word = sys.argv[1]
+	max_dist = int(sys.argv[2])
+	t = create_triedict()
+	suggestions = suggest_words(t, word, max_dist)
+	print suggestions
