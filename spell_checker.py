@@ -17,6 +17,7 @@ class BloomFilter():
   """
 
   def __init__(self, size, numhashes):
+    # 1-e^(-kn/m))^k
     self.size = 2 ** size
     self.bitarray = bytearray(self.size)
     self.num_hashes = numhashes
