@@ -13,4 +13,8 @@ All methods create the required data structures necessary and then spell check/s
 How To Use:
 --------
 
+  For 1:
+  > ./name_of_file /source/to/dictionary source_word max_distance
+
+  For 2, 3, and 4:
   > ./name_of_file /source/to/dictionary source_word
