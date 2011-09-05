@@ -49,11 +49,11 @@ def find_editdistances(root, target, currentrow_num, lastrow, distances, max_dis
   
 
 
-def create_triedict():
+def create_triedict(word_src):
   """Creates a trie from all the words in the Unix dictionary """
 
   trie = Trie()
-  with open('/usr/share/dict/words', 'rt') as f:
+  with open(word_src, 'rt') as f:
     for word in f.read().split():
       trie.insert(word.lower())
   return trie
@@ -124,8 +124,9 @@ class Trie:
     return False
 
 if __name__ == '__main__':
-	word = sys.argv[1]
-	max_dist = int(sys.argv[2])
-	t = create_triedict()
+	word_src = sys.argv[1]
+	word = sys.argv[2]
+	max_dist = int(sys.argv[3])
+	t = create_triedict(word_src)
 	suggestions = suggest_words(t, word, max_dist)
 	print suggestions

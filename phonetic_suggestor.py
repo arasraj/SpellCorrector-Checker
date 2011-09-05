@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys
 from collections import defaultdict
 from collections import namedtuple
@@ -20,6 +22,7 @@ class PhoneticSuggestor():
       if char in self.rules:
         tmp.append(self.rules[char])
 
+    # remove consecutive dups
     for i in range(len(tmp)-1, 0, -1):
       if tmp[i] == tmp[i-1]:
         tmp.pop(i)
