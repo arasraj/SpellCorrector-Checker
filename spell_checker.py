@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import murmur
 
 
@@ -17,7 +18,8 @@ class BloomFilter():
   """
 
   def __init__(self, size, numhashes):
-    # 1-e^(-kn/m))^k
+    # 1-e^(-kn/m))^k used to choose the "size" param. It 
+    # returns the probability of false positives.
     self.size = 2 ** size
     self.bitarray = bytearray(self.size)
     self.num_hashes = numhashes
@@ -78,7 +80,7 @@ class SpellChecker(BloomFilter):
 
 
 if __name__ == '__main__':
-	sc = SpellChecker(20, 5, '/usr/share/dict/words')
-	print sc.check('bob')
-	print sc.check('business')
-	print sc.check('thwis')
+	words_src = sys.argv[1]
+	word = sys.argv[2]
+	sc = SpellChecker(20, 5, words_src)
+	print sc.check(word)

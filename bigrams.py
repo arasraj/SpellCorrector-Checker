@@ -59,8 +59,9 @@ class BigramSpellSuggestor():
     # sort by similarity
     suggestions = sorted(suggestions, key=lambda jaccard: jaccard[1], reverse=True)[:30]
     # sort by word freq
-    suggestions = sorted(suggestions, key=lambda suggestion: suggestion[0].freq, reverse=True)[:10]
-    return [suggestion[0].word for suggestion in suggestions]
+    return [suggestion[0].word for suggestion in 
+            sorted(suggestions, key=lambda suggestion: suggestion[0].freq, 
+            reverse=True)][:10]
 
 
   def word_bigrams(self, word):
